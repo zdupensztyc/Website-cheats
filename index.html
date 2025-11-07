@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pytania - historia</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.1;
+            color: #333;
+            background: #f8f9fa;
+            width: 100%;
+            min-height: 100vh;
+            padding: 2px;
+            font-size: 7px;
+        }
+        
+        .header {
+            background: #2c3e50;
+            color: white;
+            padding: 2px 3px;
+            text-align: center;
+            border-radius: 2px;
+            margin-bottom: 2px;
+        }
+        
+        h1 {
+            font-size: 8px;
+            margin-bottom: 1px;
+        }
+        
+        .stats {
+            font-size: 6px;
+            opacity: 0.8;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 2px;
+            margin-top: 2px;
+        }
+        
+        button {
+            padding: 1px 2px;
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 1px;
+            cursor: pointer;
+            font-size: 5px;
+        }
+        
+        .categories {
+            display: flex;
+            gap: 1px;
+            margin-bottom: 2px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        .category-btn {
+            padding: 1px 3px;
+            background: #ecf0f1;
+            border: 1px solid #bdc3c7;
+            border-radius: 1px;
+            cursor: pointer;
+            font-size: 5px;
+        }
+        
+        .category-btn.active {
+            background: #3498db;
+            color: white;
+            border-color: #2980b9;
+        }
+        
+        .container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(85px, 1fr));
+            gap: 1px;
+        }
+        
+        .question-card {
+            background: white;
+            border-radius: 1px;
+            padding: 2px;
+            box-shadow: 0 0.5px 1px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            min-height: 30px;
+        }
+        
+        .daty { border-left: 1px solid #e74c3c; }
+        .wielo { border-left: 1px solid #f39c12; }
+        .jedno { border-left: 1px solid #27ae60; }
+        .pisemne { border-left: 1px solid #9b59b6; }
+        
+        .question {
+            font-weight: bold;
+            margin-bottom: 1px;
+            font-size: 6px;
+            color: #2c3e50;
+            border-bottom: 0.5px solid #eee;
+            padding-bottom: 0.5px;
+            line-height: 1;
+        }
+        
+        .answer {
+            color: #555;
+            font-size: 5px;
+            line-height: 1;
+            flex-grow: 1;
+        }
+        
+        .correct-answer {
+            background: #d4edda;
+            padding: 0.5px 1px;
+            border-radius: 0.5px;
+            margin-top: 1px;
+            font-size: 5px;
+        }
+
+        /* Dla telefonów - 4 kolumny */
+        @media (max-width: 480px) {
+            .container {
+                grid-template-columns: repeat(4, 1fr);
+            }
+            
+            body {
+                font-size: 6px;
+                padding: 1px;
+            }
+            
+            .question-card {
+                min-height: 28px;
+                padding: 1px;
+            }
+            
+            .question {
+                font-size: 5.5px;
+            }
+            
+            .answer {
+                font-size: 4.5px;
+            }
+            
+            .header {
+                padding: 1px 2px;
+            }
+            
+            h1 {
+                font-size: 7px;
+            }
+        }
+
+        /* Dla bardzo małych telefonów */
+        @media (max-width: 360px) {
+            .container {
+                grid-template-columns: repeat(4, 1fr);
+            }
+            
+            .question-card {
+                min-height: 25px;
+            }
+            
+            .question {
+                font-size: 5px;
+            }
+            
+            .answer {
+                font-size: 4px;
+            }
+        }
+
+        /* Tryb ciemny */
+        .dark-mode {
+            background: #1a1a1a;
+            color: #e0e0e0;
+        }
+        
+        .dark-mode .header {
+            background: #1a1a1a;
+        }
+        
+        .dark-mode .question-card {
+            background: #2d2d2d;
+            color: #e0e0e0;
+        }
+        
+        .dark-mode .question {
+            color: #e0e0e0;
+            border-bottom-color: #444;
+        }
+        
+        .dark-mode .answer {
+            color: #b0b0b0;
+        }
+        
+        .dark-mode .category-btn {
+            background: #34495e;
+            color: #ecf0f1;
+            border-color: #4a6278;
+        }
+        
+        .dark-mode .category-btn.active {
+            background: #3498db;
+        }
+        
+        .dark-mode .correct-answer {
+            background: #155724;
+            color: #d4edda;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Pytania - historia</h1>
+        <div class="stats">Pytań: <span id="total-questions">18</span> | Kategoria: <span id="current-category">wszystkie</span></div>
+        <div class="controls">
+            <button onclick="toggleDarkMode()">🌓</button>
+            <button onclick="sortAlphabetically()">A-Z</button>
+            <button onclick="shuffleQuestions()">🔀</button>
+            <button onclick="showAllCategories()">📚 Wszystkie</button>
+        </div>
+    </div>
+    
+    <div class="categories">
+        <button class="category-btn active" onclick="filterByCategory('all')">Wszystkie</button>
+        <button class="category-btn" onclick="filterByCategory('daty')">Daty</button>
+        <button class="category-btn" onclick="filterByCategory('wielo')">Wielokrotny wybór</button>
+        <button class="category-btn" onclick="filterByCategory('jedno')">Pojedynczy wybór</button>
+        <button class="category-btn" onclick="filterByCategory('pisemne')">Odpowiedzi pisemne</button>
+    </div>
+    
+    <div class="container" id="questions-container">
+        <!-- NOWE PYTANIA -->
+        <div class="question-card jedno" data-category="jedno">
+            <div class="question">Który papież odrzucił tezy Marcina Lutra?</div>
+            <div class="answer">Leon X</div>
+        </div>
+        
+        <div class="question-card jedno" data-category="jedno">
+            <div class="question">Jak nazywała się opłata składana przez kraje uznające zwierzchnictwo lenne papiestwa?</div>
+            <div class="answer">Świętopietrze</div>
+        </div>
+        
+        <div class="question-card jedno" data-category="jedno">
+            <div class="question">Co było jedynym źródłem wiary według Lutra?</div>
+            <div class="answer">Biblia</div>
+        </div>
+        
+        <div class="question-card jedno" data-category="jedno">
+            <div class="question">Które dwa sakramenty uznawał Luter?</div>
+            <div class="answer">Chrzest i komunia</div>
+        </div>
+        
+        <div class="question-card jedno" data-category="jedno">
+            <div class="question">Gdzie Jan Kalwin rozpoczął swoją działalność w 1536 roku?</div>
+            <div class="answer">W Genewie</div>
+        </div>
+        
+        <div class="question-card wielo" data-category="wielo">
+            <div class="question">Jakie elementy zachowano w Kościele anglikańskim?</div>
+            <div class="correct-answer">✓ Hierarchię kościelną<br>✓ dogmaty<br>✓ tradycję</div>
+        </div>
+        
+        <div class="question-card jedno" data-category="jedno">
+            <div class="question">Co oznacza termin "purytanizm" w kontekście religijnym?</div>
+            <div class="answer">Ruch dążący do reformy Kościoła anglikańskiego</div>
+        </div>
+        
+        <div class="question-card jedno" data-category="jedno">
+            <div class="question">Wydarzenie uznawane za początek renesansu w Europie to:</div>
+            <div class="answer">zdobycie Konstantynopola przez Turków w 1453 r.</div>
+        </div>
+        
+        <div class="question-card jedno" data-category="jedno">
+            <div class="question">Francuskie "renaissance" oznacza:</div>
+            <div class="answer">odrodzenie</div>
+        </div>
+        
+        <div class="question-card jedno" data-category="jedno">
+            <div class="question">Renesans został zapoczątkowany:</div>
+            <div class="answer">we Włoszech</div>
+        </div>
+        
+        <div class="question-card jedno" data-category="jedno">
+            <div class="question">Nazwa "odrodzenie" oznacza:</div>
+            <div class="answer">nawiązanie do kultury antycznej</div>
+        </div>
+        
+        <div class="question-card jedno" data-category="jedno">
+            <div class="question">Renesansowy prąd umysłowy interesujący się potrzebami człowieka, jego rozwojem i indywidualnością to:</div>
+            <div class="answer">humanizm</div>
+        </div>
+        
+        <div class="question-card jedno" data-category="jedno">
+            <div class="question">Autorem widocznego na ilustracji dzieła jest:</div>
+            <div class="answer">Leonardo da Vinci</div>
+        </div>
+        
+        <div class="question-card daty" data-category="daty">
+            <div class="question">Pokój religijny w Augsburgu podpisano w roku:</div>
+            <div class="answer">1555</div>
+        </div>
+        
+        <div class="question-card jedno" data-category="jedno">
+            <div class="question">Nepotyzm to nadawanie stanowisk członkom własnej rodziny</div>
+            <div class="answer">Prawda</div>
+        </div>
+        
+        <div class="question-card daty" data-category="daty">
+            <div class="question">Marcin Luter ogłosił swoich 95 tez w roku</div>
+            <div class="answer">1517</div>
+        </div>
+        
+        <div class="question-card jedno" data-category="jedno">
+            <div class="question">Związek Szmalkaldzki to sojusz polityczny i wojskowy zawarty między katolickimi książętami i miastami Rzeszy</div>
+            <div class="answer">Fałsz</div>
+        </div>
+    </div>
+
+    <script>
+        let currentCategory = 'all';
+        
+        function filterByCategory(category) {
+            currentCategory = category;
+            const questions = document.querySelectorAll('.question-card');
+            const categoryBtns = document.querySelectorAll('.category-btn');
+            
+            categoryBtns.forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.textContent.toLowerCase().includes(category) || (category === 'all' && btn.textContent.includes('Wszystkie'))) {
+                    btn.classList.add('active');
+                }
+            });
+            
+            questions.forEach(question => {
+                if (category === 'all' || question.getAttribute('data-category') === category) {
+                    question.style.display = 'flex';
+                } else {
+                    question.style.display = 'none';
+                }
+            });
+            
+            document.getElementById('current-category').textContent = 
+                category === 'all' ? 'wszystkie' : category;
+                
+            updateQuestionCount();
+        }
+        
+        function showAllCategories() {
+            filterByCategory('all');
+        }
+        
+        function shuffleQuestions() {
+            const container = document.getElementById('questions-container');
+            const questions = Array.from(container.querySelectorAll('.question-card'));
+            
+            const visibleQuestions = questions.filter(q => q.style.display !== 'none');
+            
+            for (let i = visibleQuestions.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                container.insertBefore(visibleQuestions[j], visibleQuestions[i]);
+            }
+        }
+        
+        function sortAlphabetically() {
+            const container = document.getElementById('questions-container');
+            const questions = Array.from(container.querySelectorAll('.question-card'));
+            
+            questions.sort((a, b) => {
+                const textA = a.querySelector('.question').textContent.toLowerCase();
+                const textB = b.querySelector('.question').textContent.toLowerCase();
+                return textA.localeCompare(textB);
+            });
+            
+            questions.forEach(question => {
+                container.appendChild(question);
+            });
+        }
+        
+        function toggleDarkMode() {
+            document.body.classList.toggle('dark-mode');
+        }
+        
+        function updateQuestionCount() {
+            const visibleQuestions = document.querySelectorAll('.question-card[style="display: flex"]');
+            document.getElementById('total-questions').textContent = visibleQuestions.length;
+        }
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            updateQuestionCount();
+            // Automatyczne sortowanie przy załadowaniu
+            sortAlphabetically();
+        });
+    </script>
+</body>
+</html>
