@@ -1,3 +1,359 @@
+
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pytania - reformacja w Rzeczpospolitej</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.3;
+            color: #333;
+            background: #f8f9fa;
+            width: 100%;
+            min-height: 100vh;
+            padding: 8px;
+            font-size: 14px;
+        }
+        
+        .header {
+            background: #2c3e50;
+            color: white;
+            padding: 10px 15px;
+            text-align: center;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+        
+        h1 {
+            font-size: 18px;
+            margin-bottom: 5px;
+        }
+        
+        .stats {
+            font-size: 12px;
+            opacity: 0.8;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 8px;
+        }
+        
+        button {
+            padding: 6px 12px;
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        
+        .categories {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        .category-btn {
+            padding: 6px 12px;
+            background: #ecf0f1;
+            border: 1px solid #bdc3c7;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        
+        .category-btn.active {
+            background: #3498db;
+            color: white;
+            border-color: #2980b9;
+        }
+        
+        .container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 10px;
+        }
+        
+        .question-card {
+            background: white;
+            border-radius: 8px;
+            padding: 12px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            min-height: 120px;
+        }
+        
+        .daty { border-left: 4px solid #e74c3c; }
+        .wielo { border-left: 4px solid #f39c12; }
+        .jedno { border-left: 4px solid #27ae60; }
+        .pisemne { border-left: 4px solid #9b59b6; }
+        
+        .question {
+            font-weight: bold;
+            margin-bottom: 8px;
+            font-size: 14px;
+            color: #2c3e50;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 5px;
+            line-height: 1.3;
+        }
+        
+        .answer {
+            color: #555;
+            font-size: 13px;
+            line-height: 1.3;
+            flex-grow: 1;
+        }
+        
+        .correct-answer {
+            background: #d4edda;
+            padding: 5px 8px;
+            border-radius: 4px;
+            margin-top: 5px;
+            font-size: 13px;
+        }
+
+        /* Dla telefonów - 2 kolumny */
+        @media (max-width: 768px) {
+            .container {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            body {
+                padding: 5px;
+                font-size: 13px;
+            }
+            
+            .question-card {
+                min-height: 100px;
+                padding: 8px;
+            }
+            
+            .question {
+                font-size: 13px;
+            }
+            
+            .answer {
+                font-size: 12px;
+            }
+        }
+
+        /* Dla małych telefonów - 1 kolumna */
+        @media (max-width: 480px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+            
+            .question-card {
+                min-height: 90px;
+            }
+        }
+
+/* Tryb ciemny */
+        .dark-mode {
+            background: #1a1a1a;
+            color: #e0e0e0;
+        }
+        
+        .dark-mode .header {
+            background: #1a1a1a;
+        }
+        
+        .dark-mode .question-card {
+            background: #2d2d2d;
+            color: #e0e0e0;
+        }
+        
+        .dark-mode .question {
+            color: #e0e0e0;
+            border-bottom-color: #444;
+        }
+        
+        .dark-mode .answer {
+            color: #b0b0b0;
+        }
+        
+        .dark-mode .category-btn {
+            background: #34495e;
+            color: #ecf0f1;
+            border-color: #4a6278;
+        }
+        
+        .dark-mode .category-btn.active {
+            background: #3498db;
+        }
+        
+        .dark-mode .correct-answer {
+            background: #155724;
+            color: #d4edda;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Pytania - reformacja w Rzeczpospolitej</h1>
+        <div class="stats">Pytań: <span id="total-questions">20</span> | Kategoria: <span id="current-category">wszystkie</span></div>
+        <div class="controls">
+            <button onclick="toggleDarkMode()">🌓 Tryb ciemny</button>
+            <button onclick="sortAlphabetically()">A-Z Sortuj</button>
+            <button onclick="shuffleQuestions()">🔀 Tasuj</button>
+            <button onclick="showAllCategories()">📚 Wszystkie</button>
+        </div>
+    </div>
+    
+    <div class="categories">
+        <button class="category-btn active" onclick="filterByCategory('all')">Wszystkie</button>
+        <button class="category-btn" onclick="filterByCategory('daty')">Daty</button>
+        <button class="category-btn" onclick="filterByCategory('wielo')">Wielokrotny wybór</button>
+        <button class="category-btn" onclick="filterByCategory('jedno')">Pojedynczy wybór</button>
+        <button class="category-btn" onclick="filterByCategory('pisemne')">Odpowiedzi pisemne</button>
+    </div>
+    
+    <div class="container" id="questions-container">
+        <!-- PYTANIA O REFORMACJĘ W RZECZPOSPOLITEJ -->
+        <div class="question-card jedno" data-category="jedno">
+            <div class="question">Artykuły henrykowskie a Pacta conventa</div>
+            <div class="answer">Artykuły henrykowskie - zasady władzy, Pacta conventa - umowy z królem</div>
+        </div>
+        
+        <div class="question-card jedno" data-category="jedno">
+            <div class="question">Bracia czescy</div>
+            <div class="answer">zwolennicy husytyzmu</div>
+        </div>
+        
+        <div class="question-card jedno" data-category="jedno">
+            <div class="question">Dlaczego szlachcie odpowiadał kalwinizm?</div>
+            <div class="correct-answer">✓ Obie odpowiedzi są poprawne</div>
+        </div>
+        
+        <div class="question-card daty" data-category="daty">
+            <div class="question">Ile tez w Wittenberdze?</div>
+            <div class="answer">95</div>
+        </div>
+        
+        <div class="question-card daty" data-category="daty">
+            <div class="question">Ile % sejmów zerwanych?</div>
+            <div class="answer">40%</div>
+        </div>
+        
+        <div class="question-card daty" data-category="daty">
+            <div class="question">Konstytucje 1504r.</div>
+            <div class="answer">Piotrków, zakaz nadawania dóbr bez sejmu</div>
+        </div>
+        
+        <div class="question-card jedno" data-category="jedno">
+            <div class="question">Kto głównie za reformacją?</div>
+            <div class="answer">niemieckojęzyczni mieszczanie z Prus i Wielkopolski</div>
+        </div>
+        
+        <div class="question-card jedno" data-category="jedno">
+            <div class="question">Która szlachta miała więcej przywilejów?</div>
+
+<div class="answer">Każdy miał tyle samo</div>
+        </div>
+        
+        <div class="question-card jedno" data-category="jedno">
+            <div class="question">Najliczniejsza mniejszość etniczna</div>
+            <div class="answer">Żydzi</div>
+        </div>
+        
+        <div class="question-card jedno" data-category="jedno">
+            <div class="question">Nihil novi</div>
+            <div class="answer">Konstytucja 1505, zakaz ustaw bez sejmu</div>
+        </div>
+        
+        <div class="question-card jedno" data-category="jedno">
+            <div class="question">Polski przedstawiciel kontrreformacji</div>
+            <div class="answer">Stanisław Hozjusz</div>
+        </div>
+        
+        <div class="question-card daty" data-category="daty">
+            <div class="question">Pierwsze wytyczne reformy</div>
+            <div class="answer">synod w Piotrkowie</div>
+        </div>
+        
+        <div class="question-card wielo" data-category="wielo">
+            <div class="question">Przyczyny kontrreformacji</div>
+            <div class="correct-answer">✓ walka z reformacją<br>✓ zatrzymanie wiernych<br>✓ reforma Kościoła</div>
+        </div>
+        
+        <div class="question-card jedno" data-category="jedno">
+            <div class="question">Skąd dotarła reformacja?</div>
+            <div class="answer">z Europy Zachodniej</div>
+        </div>
+        
+        <div class="question-card jedno" data-category="jedno">
+            <div class="question">Skutki kontrreformacji</div>
+            <div class="answer">powstanie nowych wyznań chrześcijańskich</div>
+        </div>
+        
+        <div class="question-card jedno" data-category="jedno">
+            <div class="question">Skutki Unii Lubelskiej</div>
+            <div class="answer">powstała Rzeczpospolita Obojga Narodów</div>
+        </div>
+        
+        <div class="question-card jedno" data-category="jedno">
+            <div class="question">Unia brzeska</div>
+            <div class="answer">połączenie Cerkwi z Kościołem łacińskim</div>
+        </div>
+        
+        <div class="question-card jedno" data-category="jedno">
+            <div class="question">Unitarianie/arianie</div>
+            <div class="answer">bracia polscy</div>
+        </div>
+        
+        <div class="question-card wielo" data-category="wielo">
+            <div class="question">W Rzeczpospolitej współistniały</div>
+            <div class="correct-answer">✓ wszystkie odpowiedzi są poprawne</div>
+        </div>
+        
+        <div class="question-card jedno" data-category="jedno">
+            <div class="question">Zgoda sandomierska</div>
+            <div class="answer">obie odpowiedzi są złe</div>
+        </div>
+    </div>
+
+    <script>
+        let currentCategory = 'all';
+        
+        function filterByCategory(category) {
+            currentCategory = category;
+            const questions = document.querySelectorAll('.question-card');
+            const categoryBtns = document.querySelectorAll('.category-btn');
+            
+            categoryBtns.forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.textContent.toLowerCase().includes(category) || (category === 'all' && btn.textContent.includes('Wszystkie'))) {
+                    btn.classList.add('active');
+                }
+            });
+            
+            questions.forEach(question => {
+                if (category === 'all' || question.getAttribute('data-category') === category) {
+                    question.style.display = 'flex';
+                } else {
+                    question.style.display = 'none';
+                }
+            });
+            
+            document.getElementById('current-category').textContent = 
+                category === 'all' ? 'wszystkie' : category;
+
 updateQuestionCount();
         }
         
