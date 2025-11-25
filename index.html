@@ -1,207 +1,50 @@
-<!DOCTYPE html>
-<html lang="pl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pytania - reformacja w Rzeczpospolitej</title>
-    <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
+updateQuestionCount();
         }
         
-        body {
-            font-family: Arial, sans-serif;
-            line-height: 1.3;
-            color: #333;
-            background: #f8f9fa;
-            width: 100%;
-            min-height: 100vh;
-            padding: 8px;
-            font-size: 14px;
+        function showAllCategories() {
+            filterByCategory('all');
         }
         
-        .header {
-            background: #2c3e50;
-            color: white;
-            padding: 10px 15px;
-            text-align: center;
-            border-radius: 8px;
-            margin-bottom: 10px;
-        }
-        
-        h1 {
-            font-size: 18px;
-            margin-bottom: 5px;
-        }
-        
-        .stats {
-            font-size: 12px;
-            opacity: 0.8;
-        }
-        
-        .controls {
-            display: flex;
-            justify-content: center;
-            gap: 8px;
-            margin-top: 8px;
-        }
-        
-        button {
-            padding: 6px 12px;
-            background: #3498db;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 12px;
-        }
-        
-        .categories {
-            display: flex;
-            gap: 5px;
-            margin-bottom: 10px;
-            flex-wrap: wrap;
-            justify-content: center;
-        }
-        
-        .category-btn {
-            padding: 6px 12px;
-            background: #ecf0f1;
-            border: 1px solid #bdc3c7;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 12px;
-        }
-        
-        .category-btn.active {
-            background: #3498db;
-            color: white;
-            border-color: #2980b9;
-        }
-        
-        .container {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 10px;
-        }
-        
-        .question-card {
-            background: white;
-            border-radius: 8px;
-            padding: 12px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            display: flex;
-            flex-direction: column;
-            min-height: 120px;
-        }
-        
-        .daty { border-left: 4px solid #e74c3c; }
-        .wielo { border-left: 4px solid #f39c12; }
-        .jedno { border-left: 4px solid #27ae60; }
-        .pisemne { border-left: 4px solid #9b59b6; }
-        
-        .question {
-            font-weight: bold;
-            margin-bottom: 8px;
-            font-size: 14px;
-            color: #2c3e50;
-            border-bottom: 1px solid #eee;
-            padding-bottom: 5px;
-            line-height: 1.3;
-        }
-        
-        .answer {
-            color: #555;
-            font-size: 13px;
-            line-height: 1.3;
-            flex-grow: 1;
-        }
-        
-        .correct-answer {
-            background: #d4edda;
-            padding: 5px 8px;
-            border-radius: 4px;
-            margin-top: 5px;
-            font-size: 13px;
-        }
-
-        /* Dla telefonów - 2 kolumny */
-        @media (max-width: 768px) {
-            .container {
-                grid-template-columns: repeat(2, 1fr);
-            }
+        function shuffleQuestions() {
+            const container = document.getElementById('questions-container');
+            const questions = Array.from(container.querySelectorAll('.question-card'));
             
-            body {
-                padding: 5px;
-                font-size: 13px;
-            }
+            const visibleQuestions = questions.filter(q => q.style.display !== 'none');
             
-            .question-card {
-                min-height: 100px;
-                padding: 8px;
+            for (let i = visibleQuestions.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                container.insertBefore(visibleQuestions[j], visibleQuestions[i]);
             }
+        }
+        
+        function sortAlphabetically() {
+            const container = document.getElementById('questions-container');
+            const questions = Array.from(container.querySelectorAll('.question-card'));
             
-            .question {
-                font-size: 13px;
-            }
+            questions.sort((a, b) => {
+                const textA = a.querySelector('.question').textContent.toLowerCase();
+                const textB = b.querySelector('.question').textContent.toLowerCase();
+                return textA.localeCompare(textB);
+            });
             
-            .answer {
-                font-size: 12px;
-            }
-        }
-
-        /* Dla małych telefonów - 1 kolumna */
-        @media (max-width: 480px) {
-            .container {
-                grid-template-columns: 1fr;
-            }
-            
-            .question-card {
-                min-height: 90px;
-            }
-        }
-
-        /* Tryb ciemny */
-        .dark-mode {
-            background: #1a1a1a;
-            color: #e0e0e0;
+            questions.forEach(question => {
+                container.appendChild(question);
+            });
         }
         
-        .dark-mode .header {
-            background: #1a1a1a;
+        function toggleDarkMode() {
+            document.body.classList.toggle('dark-mode');
         }
         
-        .dark-mode .question-card {
-            background: #2d2d2d;
-            color: #e0e0e0;
+        function updateQuestionCount() {
+            const visibleQuestions = document.querySelectorAll('.question-card[style="display: flex"]');
+            document.getElementById('total-questions').textContent = visibleQuestions.length;
         }
         
-        .dark-mode .question {
-            color: #e0e0e0;
-            border-bottom-color: #444;
-        }
-        
-        .dark-mode .answer {
-            color: #b0b0b0;
-        }
-        
-        .dark-mode .category-btn {
-            background: #34495e;
-            color: #ecf0f1;
-            border-color: #4a6278;
-        }
-        
-        .dark-mode .category-btn.active {
-            background: #3498db;
-        }
-        
-        .dark-mode .correct-answer {
-            background: #155724;
-            color: #d4edda;
-        }
-    </style>
-</head>
-<body>
-    <div class="header"
+        document.addEventListener('DOMContentLoaded', function() {
+            updateQuestionCount();
+            sortAlphabetically();
+        });
+    </script>
+</body>
+</html>
